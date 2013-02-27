@@ -3,7 +3,7 @@
 #include <opencv2\opencv.hpp>
 
 #include "HOGFeaturesOfBlock.h"
-#include "Point2DAbhishek.h"
+
 
 #define min(x,y) ((x)<=(y)?(x):(y))
 #define max(x,y) ((x)<=(y)?(y):(x))
@@ -32,9 +32,7 @@ public :
   }
 
   void getFeatVec(int blockY, int blockX, HOGFeaturesOfBlock & featsB);
-  //void getFeatValForPixels(const std::vector<Point2DAbhishek> & interestPointsInImage, HOGFeaturesOfBlock & hogFeats);
-  void pixel2BlockOut(const Point2DAbhishek & p,Point2DAbhishek  & b );
-    
+      
   static  int const sbin=8;
 
   void computeHOG(const Mat& image, int width, int height);

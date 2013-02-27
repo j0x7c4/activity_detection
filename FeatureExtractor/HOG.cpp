@@ -3,7 +3,6 @@
 //#include "mex.h"
 #include <stdlib.h>
 #include "HOGFeaturesOfBlock.h"
-#include "Point2DAbhishek.h"
 #include "HOG.h"
 #include "constants.h"
 #include <assert.h>
@@ -66,16 +65,6 @@ void HOG::getFeatVec(int blockY, int blockX, HOGFeaturesOfBlock & featsB)
 //  //push all out blocks with max to a vector and aggregate
 //}
 
-
-void HOG::pixel2BlockOut(const Point2DAbhishek & p,Point2DAbhishek  & b )
-{
-  //return -1 if out of range block
-  b.x=((int)((float)p.x/(float)sbin)+0.5) -1 ;
-  b.y=((int)((float)p.y/(float)sbin)+0.5) -1;
-  //cout <<"block selected"<< b.x<<","<<b.y<<" for pixel "<<p.x<<","<<p.y<<endl;
-  if(b.x<0 || b.x>=numBlocksOutX ||b.y<0 || b.y>=numBlocksOutY )
-    b.x=-1;
-}
 
 
   // Assume IMAGE is width x height x 4
