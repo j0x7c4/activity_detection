@@ -1,8 +1,14 @@
 #ifndef HOG_H
 #define HOG_H
+#include <opencv2\opencv.hpp>
 
 #include "HOGFeaturesOfBlock.h"
 #include "Point2DAbhishek.h"
+
+#define min(x,y) ((x)<=(y)?(x):(y))
+#define max(x,y) ((x)<=(y)?(y):(x))
+
+using namespace cv;
 
 class HOG
 {
@@ -26,20 +32,14 @@ public :
   }
 
   void getFeatVec(int blockY, int blockX, HOGFeaturesOfBlock & featsB);
-  void getFeatValForPixels(const std::vector<Point2DAbhishek> & interestPointsInImage, HOGFeaturesOfBlock & hogFeats);
+  //void getFeatValForPixels(const std::vector<Point2DAbhishek> & interestPointsInImage, HOGFeaturesOfBlock & hogFeats);
   void pixel2BlockOut(const Point2DAbhishek & p,Point2DAbhishek  & b );
     
-  static inline double min(double x, double y) { return (x <= y ? x : y); }
-  static inline double max(double x, double y) { return (x <= y ? y : x); }
-
-  static inline int min(int x, int y) { return (x <= y ? x : y); }
-  static inline int max(int x, int y) { return (x <= y ? y : x); }
-
   static  int const sbin=8;
 
-  void computeHOG(int ***IMAGE, int width, int height);
+  void computeHOG(const Mat& image, int width, int height);
   size_t getOffsetInMatlabImage(size_t y, size_t x, size_t channel,size_t dimY, size_t dimX);
-  void process(const double *im, const int *dims);
+  void process(const Mat& image, const int *dims);
 
 
 int 

@@ -1,3 +1,5 @@
+#ifndef CONSTANTS_H
+#define CONSTANTS_H
 const int SLEEP_TIME = 0;
 
 const int JOINT_NUM = 11;
@@ -26,3 +28,4 @@ const int frameStoreNum = 66;
 const int compareFrame[] = {0, -5, -9, -14, -20, -27, -35, -44, -54, -65};
 const int compareFrameNum = sizeof(compareFrame)/sizeof(compareFrame[0]);
 
+#endif

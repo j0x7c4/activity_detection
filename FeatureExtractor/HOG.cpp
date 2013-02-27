@@ -5,6 +5,7 @@
 #include "HOGFeaturesOfBlock.h"
 #include "Point2DAbhishek.h"
 #include "HOG.h"
+#include "constants.h"
 #include <assert.h>
 
 // small value, used to avoid division by zero
@@ -20,57 +21,57 @@ void HOG::getFeatVec(int blockY, int blockX, HOGFeaturesOfBlock & featsB)
     featsB.feats[featIndex]=*(feat + featIndex*numBlocksOutX*numBlocksOutY + blockX*numBlocksOutY+ blockY);
 }
 
-void HOG::getFeatValForPixels(const std::vector<Point2DAbhishek> & interestPointsInImage, HOGFeaturesOfBlock & hogFeats)
-{
-  // bin pixels into blocksOuts()
-  cout<<interestPointsInImage.size ()<<endl;
-  int numPointsInBlock[numBlocksOutY][numBlocksOutX];
-  for(int y=0;y<numBlocksOutY;y++)
-    for(int x=0;x<numBlocksOutX;x++)
-      numPointsInBlock[y][x]=0;
-  
-  Point2DAbhishek outBlock;
-  
-  for(int i=0;i<interestPointsInImage.size();i++)
-    {
-      //     cout<<"in loop"<<endl;
-      pixel2BlockOut (interestPointsInImage[i],outBlock);
-      if(outBlock.x!=-1) // not out of range ... boundary blocks are out of range
-	numPointsInBlock[outBlock.y][outBlock.x]++;
-      //   cout<<"out loop"<<endl;
-    }
-  
-  int max=-1;
-  //find the block(s) where most pixels lie 
-  for(int y=0;y<numBlocksOutY;y++)
-    for(int x=0;x<numBlocksOutX;x++)
-      {
-	if(max<numPointsInBlock[y][x])
-	  max=numPointsInBlock[y][x];
-      }
-  HOGFeaturesOfBlock temp;
-  std::vector<HOGFeaturesOfBlock> maxBlockFeats;
-  cout<<"max= "<<max<<endl;
-  for(int y=0;y<numBlocksOutY;y++)
-    for(int x=0;x<numBlocksOutX;x++)
-      {
-	if(max==numPointsInBlock[y][x])
-	  {
-	    cout <<"out block selected" <<x <<","<<y<<endl;
-	    getFeatVec (y,x,temp);
-	    maxBlockFeats.push_back(temp);
-	  }
-      }
-  HOGFeaturesOfBlock::aggregateFeatsOfBlocks (maxBlockFeats,hogFeats);
-  //push all out blocks with max to a vector and aggregate
-}
+//void HOG::getFeatValForPixels(const std::vector<Point2DAbhishek> & interestPointsInImage, HOGFeaturesOfBlock & hogFeats)
+//{
+//  // bin pixels into blocksOuts()
+//  cout<<interestPointsInImage.size ()<<endl;
+//  int numPointsInBlock[numBlocksOutY][numBlocksOutX];
+//  for(int y=0;y<numBlocksOutY;y++)
+//    for(int x=0;x<numBlocksOutX;x++)
+//      numPointsInBlock[y][x]=0;
+//  
+//  Point2DAbhishek outBlock;
+//  
+//  for(int i=0;i<interestPointsInImage.size();i++)
+//    {
+//      //     cout<<"in loop"<<endl;
+//      pixel2BlockOut (interestPointsInImage[i],outBlock);
+//      if(outBlock.x!=-1) // not out of range ... boundary blocks are out of range
+//	numPointsInBlock[outBlock.y][outBlock.x]++;
+//      //   cout<<"out loop"<<endl;
+//    }
+//  
+//  int max=-1;
+//  //find the block(s) where most pixels lie 
+//  for(int y=0;y<numBlocksOutY;y++)
+//    for(int x=0;x<numBlocksOutX;x++)
+//      {
+//	if(max<numPointsInBlock[y][x])
+//	  max=numPointsInBlock[y][x];
+//      }
+//  HOGFeaturesOfBlock temp;
+//  std::vector<HOGFeaturesOfBlock> maxBlockFeats;
+//  cout<<"max= "<<max<<endl;
+//  for(int y=0;y<numBlocksOutY;y++)
+//    for(int x=0;x<numBlocksOutX;x++)
+//      {
+//	if(max==numPointsInBlock[y][x])
+//	  {
+//	    cout <<"out block selected" <<x <<","<<y<<endl;
+//	    getFeatVec (y,x,temp);
+//	    maxBlockFeats.push_back(temp);
+//	  }
+//      }
+//  HOGFeaturesOfBlock::aggregateFeatsOfBlocks (maxBlockFeats,hogFeats);
+//  //push all out blocks with max to a vector and aggregate
+//}
 
 
 void HOG::pixel2BlockOut(const Point2DAbhishek & p,Point2DAbhishek  & b )
 {
   //return -1 if out of range block
-  b.x=((int)round((float)p.x/(float)sbin)) -1 ;
-  b.y=((int)round((float)p.y/(float)sbin)) -1;
+  b.x=((int)((float)p.x/(float)sbin)+0.5) -1 ;
+  b.y=((int)((float)p.y/(float)sbin)+0.5) -1;
   //cout <<"block selected"<< b.x<<","<<b.y<<" for pixel "<<p.x<<","<<p.y<<endl;
   if(b.x<0 || b.x>=numBlocksOutX ||b.y<0 || b.y>=numBlocksOutY )
     b.x=-1;
@@ -78,20 +79,11 @@ void HOG::pixel2BlockOut(const Point2DAbhishek & p,Point2DAbhishek  & b )
 
 
   // Assume IMAGE is width x height x 4
-void HOG::computeHOG(int ***IMAGE, int width, int height)
+void HOG::computeHOG(const Mat& image, int width, int height)
 {
-  const int NCHANNELS = 4;
   int ndims[3] = {height, width, 3};
-  double * matlabImage= (double *)calloc(width*height*(NCHANNELS-1),sizeof(double));
 
-  for(size_t y=0; y < height; y++)
-    for(size_t x=0; x < width; x++)
-      {
-	 for(size_t ch=0; ch < (NCHANNELS-1); ch++)
-	   *(matlabImage + getOffsetInMatlabImage(y, x, ch, height, width)) = (double) IMAGE[x][y][ch];
-      }
-  process (matlabImage,ndims);
-  free(matlabImage);
+  process (image,ndims);
 }
 
 size_t HOG::getOffsetInMatlabImage(size_t y, size_t x, size_t channel,size_t dimY, size_t dimX)
@@ -103,20 +95,21 @@ size_t HOG::getOffsetInMatlabImage(size_t y, size_t x, size_t channel,size_t dim
 // main function:
 // takes a double color image and a bin size 
 // returns HOG features
-void HOG::process(const double *im, const int *dims) {
+void HOG::process(const Mat& image, const int *dims) {
   
   // memory for caching orientation histograms & their norms
   int numBlocksInX;
   int numBlocksInY;
   int blocks[2];
-  blocks[0] = (int)round((double)dims[0]/(double)sbin); 
+  blocks[0] = (int)((double)dims[0]/(double)sbin+0.5); 
   numBlocksInY=blocks[0];
-  blocks[1] = (int)round((double)dims[1]/(double)sbin);
+  blocks[1] = (int)((double)dims[1]/(double)sbin+0.5);
   numBlocksInX=blocks[1];
   
-  double *hist = (double *)calloc(blocks[0]*blocks[1]*18, sizeof(double)); // stores histogram of gradients along each direction in a block
-  double *norm = (double *)calloc(blocks[0]*blocks[1], sizeof(double)); // stores for the norm for each block
-
+  //double *hist = (double *)calloc(blocks[0]*blocks[1]*18, sizeof(double)); // stores histogram of gradients along each direction in a block
+  vector<double> hist(blocks[0]*blocks[1]*18,0);
+	//double *norm = (double *)calloc(blocks[0]*blocks[1], sizeof(double)); // stores for the norm for each block
+	vector<double> norm(blocks[0]*blocks[1],0);
   // memory for HOG features
   int out[3];
   out[0] = max(blocks[0]-2, 0); // ignore the boundary blocks ?
@@ -134,50 +127,48 @@ void HOG::process(const double *im, const int *dims) {
   visible[0] = blocks[0]*sbin;
   visible[1] = blocks[1]*sbin;
   
-  for (int x = 1; x < visible[1]-1; x++) {
-    for (int y = 1; y < visible[0]-1; y++) {
-      // first color channel
-      const double *s = im + min(x, dims[1]-2)*dims[0] + min(y, dims[0]-2);
-      double dy = *(s+1) - *(s-1);
-      double dx = *(s+dims[0]) - *(s-dims[0]);
+	for ( int y = 1;  y < visible[0]-1 ; y++ ) {
+		for ( int x = 1 ; x< visible[1]-1 ; x++ ) {
+	    //printf("%d %d\n",y,x);
+			// first color channel
+      double dy = *(image.ptr(y+1) + 3*x) - *(image.ptr(y-1) + 3*x);
+      double dx = *(image.ptr(y) + 3*(x+1) ) - *(image.ptr(y) + 3*(x-1));
       double v = dx*dx + dy*dy;
 
       // second color channel
-      s += dims[0]*dims[1];
-      double dy2 = *(s+1) - *(s-1);
-      double dx2 = *(s+dims[0]) - *(s-dims[0]); //dims[0]=dimY
+      double dy2 = *(image.ptr(y+1) + 3*x+1) - *(image.ptr(y-1) + 3*x+1);
+      double dx2 = *(image.ptr(y) + 3*(x+1)+1) - *(image.ptr(y) + 3*(x-1)+1);
       double v2 = dx2*dx2 + dy2*dy2;
 
       // third color channel
-      s += dims[0]*dims[1];
-      double dy3 = *(s+1) - *(s-1);
-      double dx3 = *(s+dims[0]) - *(s-dims[0]);
+      double dy3 = *(image.ptr(y+1) + 3*x+2) - *(image.ptr(y-1) + 3*x+2);
+      double dx3 = *(image.ptr(y) + 3*(x+1)+2) - *(image.ptr(y) + 3*(x-1)+2);
       double v3 = dx3*dx3 + dy3*dy3;
 
       // pick channel with strongest gradient
       if (v2 > v) {
-	v = v2;
-	dx = dx2;
-	dy = dy2;
+				v = v2;
+				dx = dx2;
+				dy = dy2;
       } 
       if (v3 > v) {
-	v = v3;
-	dx = dx3;
-	dy = dy3;
+				v = v3;
+				dx = dx3;
+				dy = dy3;
       }
 
       // snap to one of 18 orientations
       double best_dot = 0;
       int best_o = 0;
       for (int o = 0; o < 9; o++) {
-	double dot = uu[o]*dx + vv[o]*dy;
-	if (dot > best_dot) {
-	  best_dot = dot;
-	  best_o = o;
-	} else if (-dot > best_dot) {
-	  best_dot = -dot;
-	  best_o = o+9;
-	}
+				double dot = uu[o]*dx + vv[o]*dy;
+				if (dot > best_dot) {
+					best_dot = dot;
+					best_o = o;
+				} else if (-dot > best_dot) {
+					best_dot = -dot;
+					best_o = o+9;
+				}
       }
       
       // add to 4 histograms(blocks) around pixel using linear interpolation
@@ -192,33 +183,33 @@ void HOG::process(const double *im, const int *dims) {
       v = sqrt(v);
 
       if (ixp >= 0 && iyp >= 0) {
-	*(hist + ixp*blocks[0] + iyp + best_o*blocks[0]*blocks[1]) += 
-	  vx1*vy1*v;
+					hist[ixp*blocks[0] + iyp + best_o*blocks[0]*blocks[1]] += 
+					vx1*vy1*v;
       }
 
       if (ixp+1 < blocks[1] && iyp >= 0) {
-	*(hist + (ixp+1)*blocks[0] + iyp + best_o*blocks[0]*blocks[1]) += 
-	  vx0*vy1*v;
+					hist[(ixp+1)*blocks[0] + iyp + best_o*blocks[0]*blocks[1]] += 
+					vx0*vy1*v;
       }
 
       if (ixp >= 0 && iyp+1 < blocks[0]) {
-	*(hist + ixp*blocks[0] + (iyp+1) + best_o*blocks[0]*blocks[1]) += 
-	  vx1*vy0*v;
+				hist[ixp*blocks[0] + (iyp+1) + best_o*blocks[0]*blocks[1]] += 
+					vx1*vy0*v;
       }
 
       if (ixp+1 < blocks[1] && iyp+1 < blocks[0]) {
-	*(hist + (ixp+1)*blocks[0] + (iyp+1) + best_o*blocks[0]*blocks[1]) += 
-	  vx0*vy0*v;
+				hist[(ixp+1)*blocks[0] + (iyp+1) + best_o*blocks[0]*blocks[1]] += 
+					vx0*vy0*v;
       }
     }
   }
 
   // compute energy in each block by summing over orientations
   for (int o = 0; o < 9; o++) {
-    double *src1 = hist + o*blocks[0]*blocks[1];
-    double *src2 = hist + (o+9)*blocks[0]*blocks[1];
-    double *dst = norm;
-    double *end = norm + blocks[1]*blocks[0];
+    double *src1 = &hist[0] + o*blocks[0]*blocks[1];
+    double *src2 = &hist[0] + (o+9)*blocks[0]*blocks[1];
+    double *dst = &norm[0];
+    double *end = &norm[0] + blocks[1]*blocks[0];
     while (dst < end) {
       *(dst++) += (*src1 + *src2) * (*src1 + *src2);
       src1++;
@@ -232,13 +223,13 @@ void HOG::process(const double *im, const int *dims) {
       double *dst = feat + x*out[0] + y;      
       double *src, *p, n1, n2, n3, n4;
 
-      p = norm + (x+1)*blocks[0] + y+1;
+      p = &norm[0] + (x+1)*blocks[0] + y+1;
       n1 = 1.0 / sqrt(*p + *(p+1) + *(p+blocks[0]) + *(p+blocks[0]+1) + eps);
-      p = norm + (x+1)*blocks[0] + y;
+      p = &norm[0] + (x+1)*blocks[0] + y;
       n2 = 1.0 / sqrt(*p + *(p+1) + *(p+blocks[0]) + *(p+blocks[0]+1) + eps);
-      p = norm + x*blocks[0] + y+1;
+      p = &norm[0] + x*blocks[0] + y+1;
       n3 = 1.0 / sqrt(*p + *(p+1) + *(p+blocks[0]) + *(p+blocks[0]+1) + eps);
-      p = norm + x*blocks[0] + y;      
+      p = &norm[0] + x*blocks[0] + y;      
       n4 = 1.0 / sqrt(*p + *(p+1) + *(p+blocks[0]) + *(p+blocks[0]+1) + eps);
 
       double t1 = 0;
@@ -247,23 +238,23 @@ void HOG::process(const double *im, const int *dims) {
       double t4 = 0;
 
       // contrast-sensitive features
-      src = hist + (x+1)*blocks[0] + (y+1);
+      src = &hist[0] + (x+1)*blocks[0] + (y+1);
       for (int o = 0; o < 18; o++) {
-	double h1 = min(*src * n1, 0.2);
-	double h2 = min(*src * n2, 0.2);
-	double h3 = min(*src * n3, 0.2);
-	double h4 = min(*src * n4, 0.2);
-	*dst = 0.5 * (h1 + h2 + h3 + h4);
-	t1 += h1;
-	t2 += h2;
-	t3 += h3;
-	t4 += h4;
-	dst += out[0]*out[1];
-	src += blocks[0]*blocks[1];
+				double h1 = min(*src * n1, 0.2);
+				double h2 = min(*src * n2, 0.2);
+				double h3 = min(*src * n3, 0.2);
+				double h4 = min(*src * n4, 0.2);
+				*dst = 0.5 * (h1 + h2 + h3 + h4);
+				t1 += h1;
+				t2 += h2;
+				t3 += h3;
+				t4 += h4;
+				dst += out[0]*out[1];
+				src += blocks[0]*blocks[1];
       }
 
       // contrast-insensitive features
-      src = hist + (x+1)*blocks[0] + (y+1);
+      src = &hist[0] + (x+1)*blocks[0] + (y+1);
       for (int o = 0; o < 9; o++) {
         double sum = *src + *(src + 9*blocks[0]*blocks[1]);
         double h1 = min(sum * n1, 0.2);
@@ -290,8 +281,8 @@ void HOG::process(const double *im, const int *dims) {
     }
   }
 
-  free(hist);
-  free(norm);
+  //std::free(hist);
+  //std::free(norm);
 //  return feat;
 }
 
